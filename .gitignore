@@ -1,0 +1,11 @@
+google_key.json
+.env
+venv/
+__pycache__/
+.vscode/
+*.pyc
+
+
+desktop.ini
+qa_icon_182956_2500x1686.png
+text.txt
