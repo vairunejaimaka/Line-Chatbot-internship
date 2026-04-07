@@ -1,0 +1,178 @@
+🔷 AI Application Architecture
+    LINE
+        ↓
+    Flask Webhook
+        ↓
+    Intent Classifier
+        ↓
+    -------------------------
+    | Rule Engine           |
+    | FAQ Semantic Layer    |
+    | Context Memory Layer  |
+    | AI Coach Layer        |
+    -------------------------
+        ↓
+    Response Generator
+    apikey:
+    AIzaSyA7nsWn9loBJEGvuYz-B8_frbuvoCFqWyM
+
+        # -------------------------------
+    # 🔹 Semantic FAQ 
+    # -------------------------------
+    #answer = find_faq_answer(user_message, client)
+    if len(user_message.strip()) < 3:
+        print("Skip FAQ (ข้อความสั้นเกินไป)")
+    else:
+
+        print("/ BEFORE FAQ ===")
+        t = time.time()
+        
+        faq_list = get_faq_list(client)
+        
+        if faq_list:
+            match_id = semantic_faq_match(user_message, faq_list)
+            match_id = ''.join(filter(str.isdigit, match_id))  
+            
+            duration = time.time() - t
+            print(f"\_ FAQ TIME === {duration:.3f} s")
+        
+            if match_id != "" and match_id != "0":
+                for item in faq_list:
+                    if item["id"] == match_id:
+                        reply_text = item["answer"]
+                        line_bot_api.reply_message(
+                            ReplyMessageRequest(
+                                reply_token=event.reply_token,
+                                messages=[TextMessage(text=reply_text)]
+                            )
+                        )
+                        return
+
+    # -------------------------------
+    # 🔹 Intent Detection
+    # -------------------------------
+    intent_prompt = f"""
+        จัดหมวดหมู่ข้อความนักศึกษาให้อยู่ใน 1 หมวดนี้เท่านั้น:
+        [greeting, faq, check_status, check_hours, check_company,
+        ask_preparation, ask_document, emotional_support, other]
+
+        ตอบเป็น JSON แบบ:
+        {{"intent":"ชื่อหมวด"}}
+
+        ข้อความ:
+        {user_message}
+        """
+    try:
+        intent_response = model.generate_content(
+            intent_prompt,
+            generation_config={"temperature": 0.2})
+        intent_text = intent_response.text.strip()
+        intent_text = intent_text.replace("```json", "").replace("```", "").strip()
+
+        intent_data = json.loads(intent_text)
+        intent = intent_data.get("intent", "other")
+    except Exception as e:
+        print("Intent Detection Error:", e)
+        intent = "other"
+        intent_text = ""
+
+    print("Parsed intent:", intent)
+
+    print("Detected intent:", intent_text)
+    
+    # -------------------------------
+    # 🔹 Intent Routing
+    # -------------------------------
+
+    if intent == "greeting":
+        reply_text = "สวัสดีครับ 😊 มีอะไรให้พี่ช่วยเรื่องฝึกงานไหมครับ"
+        line_bot_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text=reply_text)]
+            )
+        )
+        return
+
+    elif intent == "check_status":
+        reply_text = "กรุณาพิมพ์ในรูปแบบ:\nสถานะฝึกงาน:รหัสนักศึกษา"
+        line_bot_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text=reply_text)]
+            )
+        )
+        return
+
+    elif intent == "emotional_support":
+        # ส่งเข้า AI support mode
+        try:
+            support_prompt = f"""
+            คุณคือพี่เอ็ม ผู้ช่วยดูแลนักศึกษาฝึกงาน
+
+            ให้กำลังใจอย่างสุภาพ และให้แนวทางสั้น ๆ
+            ห้ามตอบนอกเรื่องฝึกงาน
+            ใช้ emoji ได้ 1 อัน
+            ข้อความ:
+            {user_message}
+            """
+            response = model.generate_content(
+                support_prompt,
+                generation_config={"temperature": 0.5}
+            )
+            if hasattr(response, 'text') and response.text:
+                reply_text = response.text.strip()
+            else:
+                reply_text = "พี่เข้าใจความรู้สึกนะครับ สู้ ๆ นะ 😊"
+            
+        except Exception as e:
+            print("Support Mode Error:", e)
+            reply_text = "พี่เข้าใจความรู้สึกนะครับ สู้ ๆ นะ 😊"
+
+
+        line_bot_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text=reply_text)]
+            )
+        )
+        return
+
+    # -------------------------------
+    # 🔹 AI ตอบ fallback
+    # -------------------------------
+    try:
+        system_prompt =  """
+            คุณคือ "พี่เอ็มออนิว" ผู้ช่วยดูแลนักศึกษาฝึกงาน
+
+            กติกาการตอบ:
+            - ตอบเฉพาะเรื่องฝึกงานเท่านั้น
+            - ถ้าไม่เกี่ยวกับฝึกงาน ให้ปฏิเสธสุภาพ
+            - ถ้าไม่ทราบข้อมูล ให้แนะนำติดต่อเจ้าหน้าที่
+            - ถ้าเป็นคำแนะนำ ให้ตอบเป็นข้อ 1-2-3
+            - ถ้าเป็นคำถามทั่วไป ให้ตอบสั้น กระชับ ไม่เกิน 2 บรรทัด
+            - ใช้โทนสุภาพ เป็นกันเอง ใส่ emoji ได้ 1 อัน
+            """
+        #================================
+        full_prompt = f"{system_prompt}\n\nคำถามนักศึกษา:\n{user_message}"
+        print("/ BEFORE GEMINI ===")
+        t = time.time()
+        response = model.generate_content(full_prompt)
+        duration = time.time() - t
+        print(f"\_ GEMINI TIME === {duration:.3f} s")
+        
+        reply_text = response.text.strip()
+        #================================
+        
+    except Exception as e:
+        print("Gemini Error:", e)
+        reply_text = "ทดสอบตอบกลับนะคับ👋"
+
+    line_bot_api.reply_message(
+        ReplyMessageRequest(
+            reply_token=event.reply_token,
+            messages=[TextMessage(text=reply_text)]
+        )
+    )
+    log_time(start_time)
+    return
