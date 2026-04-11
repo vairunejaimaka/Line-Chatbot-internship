@@ -24,13 +24,23 @@ from flex_templates import create_status_flex, create_faq_flex ,create_basic_men
 # 1. ตั้งค่า LINE API Keys (แทนที่ด้วยค่าจริงของคุณ)
 # ดึงค่าเหล่านี้จาก LINE Developers Console -> Messaging API
 load_dotenv()  # โหลดตัวแปรสภาพแวดล้อมจากไฟล์ .env
+load_dotenv(override=True)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+print("KEY FOUND:", GEMINI_API_KEY is not None)
+print("LAST 6:", GEMINI_API_KEY[-6:] if GEMINI_API_KEY else "NOT FOUND")
+
+key = os.getenv("GEMINI_API_KEY")
+print("KEY =", key)
+print("LAST 6 =", key[-6:] if key else "NOT FOUND")
 
 CHANNEL_ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN')
 CHANNEL_SECRET = os.getenv('LINE_CHANNEL_SECRET')
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')    
-
-model = genai.GenerativeModel('gemini-2.5-flash')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY') 
+   
 genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel('gemini-2.5-flash')
+
 
 app = Flask(__name__)
 
@@ -409,7 +419,7 @@ def handle_message(event):
 
     except Exception as e:
         print("LLM ERROR:", e)
-        reply_text = "LLM error"
+        reply_text = f"LLM error: {str(e)}"
         #reply_text = "ไม่สามารถประมวลผลได้ กรุณาลองใหม่อีกครั้งครับ"
 
     line_bot_api.reply_message(
