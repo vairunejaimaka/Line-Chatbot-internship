@@ -389,6 +389,8 @@ def handle_message(event):
     # ===============================
     # 🔹 NLP (ยิง LLM แค่ครั้งเดียว)
     # ===============================
+    reply_text = "⚠️ ระบบกำลังประมวลผล กรุณาลองใหม่อีกครั้ง"
+    
     try:
         faq_list = get_faq_list(client)
 
@@ -411,16 +413,25 @@ def handle_message(event):
     ข้อความ:
     {user_message}
     """
+        print("🔥CALLING GEMINI...")
         response = model.generate_content(
             prompt,
             generation_config={"temperature": 0.3}
         )
-        reply_text = response.text.strip()
-
+        print("✅ GEMINI DONE")
+        if hasattr(response, "text") and response.text:
+            reply_text = response.text.strip()
+        else:
+            reply_text = "ขออภัย ระบบยังไม่พร้อมตอบตอนนี้ครับ"
+            
     except Exception as e:
         print("LLM ERROR:", e)
-        reply_text = f"LLM error: {str(e)}"
-        #reply_text = "ไม่สามารถประมวลผลได้ กรุณาลองใหม่อีกครั้งครับ"
+        reply_text = "ไม่สามารถประมวลผลได้ กรุณาลองใหม่อีกครั้งครับ"
+    
+    if not reply_text:
+        reply_text = "⚠️ เราไม่มีคำตอบให้ในตอนนี้ครับ"
+    
+    print("📤REPLY", reply_text)
 
     line_bot_api.reply_message(
         ReplyMessageRequest(
