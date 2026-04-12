@@ -181,15 +181,13 @@ def handle_message(event):
     print("/ BEFORE CONNECT ===")                   
     t = time.time()
     client = connect_to_sheets()
-    if not client:
-        print("❌ GOOGLE SHEET CONNECT FAIL")
-        return
     
     duration = time.time() - t
     print(f"\_ CONNECT TIME === {duration:.5f} s")
     #______________________________________________
     
     if not client:
+        print("❌ GOOGLE SHEET CONNECT FAIL")
         return
     print("📩 USER MESSAGE:", user_message)
 
