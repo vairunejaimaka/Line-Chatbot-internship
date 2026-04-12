@@ -2,11 +2,10 @@
 
 import gspread, datetime
 from google.oauth2.service_account import Credentials
-import os,re
+import os,re,json
 # เพิ่ม get_internship_progress_66 เข้าไปในรายการ import
 
 FAQ_SHEET_NAME = "FAQ"
-CREDENTIAL_FILE_NAME = "google_key.json"
 _cached_client = None
 
 def connect_to_sheets():
@@ -16,9 +15,21 @@ def connect_to_sheets():
         if _cached_client is not None:
             return _cached_client
         
-        _cached_client = gspread.service_account(filename=CREDENTIAL_FILE_NAME)
+        creds_json = os.getenv("GOOGLE_CREDENTIALS")
+        
+        if not creds_json:
+            print("❌ Error: GOOGLE_CREDENTIALS environment variable not set.")
+            return None
+        
+        creds_dict = json.loads(creds_json)
+        
+        scopes = ["https://www.googleapis.com/auth/spreadsheets"]   
+        creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+        
+        _cached_client = gspread.authorize(creds)
         print("🟢 Google Sheets Connected (New Session).")
         return _cached_client    
+    
     except Exception as e:
             print(f"❌ Connection Error: {e}")
             return None
@@ -95,26 +106,6 @@ def get_faq_list(client):
     except Exception as e:
         print(f"Error fetching FAQ data from {FAQ_SHEET_NAME}: {e}")
         return None
-#----------------------------------------------------
-# 6. ฟังก์ชันเชื่อมต่อ Google Sheets  
-#----------------------------------------------------
-def connect_to_sheets():
-    'เชื่อมต่อกับ Google Sheets โดยใช้ Credential ที่ตั้งค่าไว้'
-    global _cached_client
-    try:
-        if _cached_client is not None:
-            return _cached_client
-        
-        # ใช้ชื่อไฟล์ที่คุณยืนยันมา
-        _cached_client = gspread.service_account(filename=CREDENTIAL_FILE_NAME) 
-        print("🟢 Google Sheets Connected.")
-        return _cached_client
-    
-    except Exception as e:
-        # ถ้ามีปัญหาในการเชื่อมต่อ ให้แสดงชื่อไฟล์ที่คาดหวังด้วย
-        print(f"❌ Error connecting to Google Sheets. Check if '{CREDENTIAL_FILE_NAME}' exists and is valid: {e}")
-        return None
-
 
 #----------------------------------------------------
 # 7. ฟังก์ชันค้นหาคำตอบ FAQ โดยใช้ข้อความคำถาม
