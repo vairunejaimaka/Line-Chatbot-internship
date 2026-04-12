@@ -181,6 +181,10 @@ def handle_message(event):
     print("/ BEFORE CONNECT ===")                   
     t = time.time()
     client = connect_to_sheets()
+    if not client:
+        print("❌ GOOGLE SHEET CONNECT FAIL")
+        return
+    
     duration = time.time() - t
     print(f"\_ CONNECT TIME === {duration:.5f} s")
     #______________________________________________
@@ -413,12 +417,12 @@ def handle_message(event):
     ข้อความ:
     {user_message}
     """
-        print("🔥CALLING GEMINI...")
+        print("/CALLING GEMINI...")
         response = model.generate_content(
             prompt,
             generation_config={"temperature": 0.3}
         )
-        print("✅ GEMINI DONE")
+        print("\_✅ GEMINI DONE")
         if hasattr(response, "text") and response.text:
             reply_text = response.text.strip()
         else:
