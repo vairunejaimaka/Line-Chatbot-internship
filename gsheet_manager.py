@@ -2,9 +2,10 @@
 
 import gspread, datetime
 from google.oauth2.service_account import Credentials
-import os,re,json
+import os,re,json,sys
 # เพิ่ม get_internship_progress_66 เข้าไปในรายการ import
 
+sys.stdout.reconfigure(line_buffering=True)
 FAQ_SHEET_NAME = "FAQ"
 _cached_client = None
 
@@ -22,6 +23,8 @@ def connect_to_sheets():
             return None
         
         creds_dict = json.loads(creds_json)
+        
+        creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
         
         scopes = ["https://www.googleapis.com/auth/spreadsheets"]   
         creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)

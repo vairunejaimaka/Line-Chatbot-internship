@@ -1,5 +1,5 @@
 # app.py
-import os ,time,json
+import os ,time,json,sys
 from dotenv import load_dotenv
 import google.generativeai as genai
 from flask import Flask, request, abort
@@ -17,12 +17,12 @@ from linebot.v3.messaging import (
     ) 
 from linebot.v3.webhooks import MessageEvent, TextMessageContent
 
-
 from gsheet_manager import get_internship_companies, get_student_info, get_internship_status, get_faq_list, connect_to_sheets, find_faq_answer, get_internship_progress_66
 from flex_templates import create_status_flex, create_faq_flex ,create_basic_menu_flex
 
 # 1. ตั้งค่า LINE API Keys (แทนที่ด้วยค่าจริงของคุณ)
 # ดึงค่าเหล่านี้จาก LINE Developers Console -> Messaging API
+sys.stdout.reconfigure(line_buffering=True)
 load_dotenv()  # โหลดตัวแปรสภาพแวดล้อมจากไฟล์ .env
 load_dotenv(override=True)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
