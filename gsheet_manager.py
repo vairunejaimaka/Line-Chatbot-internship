@@ -26,7 +26,8 @@ def connect_to_sheets():
         
         creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
         
-        scopes = ["https://www.googleapis.com/auth/spreadsheets"]   
+        scopes = ["https://www.googleapis.com/auth/spreadsheets",
+                  "https://www.googleapis.com/auth/drive"]   
         creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
         
         _cached_client = gspread.authorize(creds)
