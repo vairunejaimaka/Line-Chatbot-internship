@@ -6,7 +6,7 @@ import json
 from linebot import LineBotApi
 
 # 1. ตั้งค่า LINE API Keys (ใช้ค่าเดียวกับใน app.py)
-CHANNEL_ACCESS_TOKEN = 'yeZAsCgqy6TRDDMIWPV5oZWwTIp/JMXKgkO/l9Va4QCCGONfiAO5KVIjUrETKdRNeXpmPIlU6IAm2tSe1fTYl6lCgklh6lxGrjEiAv1ukMLxEWflYGFcp9unNqdX8mkFAJa03KSZ+QRFxslCZHiLEwdB04t89/1O/w1cDnyilFU='
+CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")  # <--- แทนที่ด้วยค่า Access Token จริงของคุณ
 
 LINE_API_URL = "https://api.line.me/v2/bot"
 line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
